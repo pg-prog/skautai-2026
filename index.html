@@ -159,6 +159,16 @@ body.lv #live{display:block}
 body.lv .login{position:relative;z-index:1;background:linear-gradient(rgba(18,34,22,.12),rgba(18,34,22,.42))}
 #live .sc{position:absolute;background:var(--login-bg) 0 0/100% 100% no-repeat}
 #live canvas{position:absolute;left:0;top:0;width:100%;height:100%}
+/* padėkos langas (sesija baigta) */
+.thx{position:relative;z-index:1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 18px;text-align:center;color:#fff;background:linear-gradient(rgba(14,28,18,.28),rgba(14,28,18,.62));animation:thxin 1.2s ease-out}
+.thx .in{max-width:560px;padding:28px 22px;border-radius:24px;background:radial-gradient(ellipse at center,rgba(10,22,14,.5),rgba(10,22,14,.18) 70%,transparent);text-shadow:0 2px 14px rgba(0,0,0,.6)}
+.thx .logo{width:76px;height:76px;font-size:38px;box-shadow:0 0 0 3px #f3d27a,0 6px 24px rgba(0,0,0,.35);text-shadow:none}
+.thx h1{font-size:clamp(30px,8vw,46px);line-height:1.12;margin:18px 0 12px}
+.thx p{font-size:18px;margin:0 0 8px}
+.thx .sub{font-size:14px;opacity:.85;margin-bottom:0;letter-spacing:.02em}
+.thx .bud{font-size:22px;font-weight:700;margin-top:22px;color:#ffe9a8}
+@keyframes thxin{from{opacity:0}to{opacity:1}}
+.note.done{background:#d9ecd9}
 </style>
 <script>(function(){var h=location.hostname,b=/github\.io$|^localhost$|^127\./.test(h)?'img/':'https://pg-prog.github.io/skautai-2026/img/',s=document.documentElement.style;s.setProperty('--login-bg','url('+b+'login_bg.jpg)');s.setProperty('--head-bg','url('+b+'header_bg.jpg)');})();</script>
 </head>
@@ -281,6 +291,8 @@ function setState(s) {
     if (PREV_LIVE !== -1) try { window.scrollTo(0, 0); } catch (e) {}
     PREV_LIVE = ls;
   }
+  if (ROLE === 'user' && s.data.live.done && (SCREEN === 'main' || SCREEN === 'name')) { showThanks(); return; }
+  if (SCREEN === 'thanks') { if (!s.data.live.done) showMain(); return; }
   if (SCREEN === 'main' && ROLE === 'user' && !s.data.joined) { showName(); return; }
   requestRender();
 }
@@ -335,7 +347,10 @@ function render() {
       '<button data-a="timer" data-op="reset">↺</button>' +
       '</div><div class="adm" style="padding-top:0">' +
       '<button data-a="stage" data-i="' + (ls - 1) + '"' + (ls <= 0 ? ' disabled' : '') + '>◀ Atgal</button>' +
-      '<button data-a="stage" data-i="' + (ls + 1) + '" data-start="1"' + (ls >= s.stages.length - 1 ? ' disabled' : '') + '>Kitas etapas ▶</button>' +
+      (ls >= s.stages.length - 1
+        ? (d.live.done ? '<button data-a="finish">↺ Atnaujinti sesiją</button>'
+          : '<button class="go" data-a="finish" data-on="1" data-confirm="1">■ Užbaigti sesiją</button>')
+        : '<button data-a="stage" data-i="' + (ls + 1) + '" data-start="1">Kitas etapas ▶</button>') +
       '<button data-a="panel">⚙</button>' +
       '</div>';
   }
@@ -351,6 +366,9 @@ function render() {
   h += '</nav></div>';
 
   h += '<main id="main">';
+  if (isAdmin() && d.live.done) {
+    h += '<div class="note done"><span><b>Sesija užbaigta.</b> Dalyviai mato padėkos langą.</span><button data-a="finish">Atnaujinti</button></div>';
+  }
   if (vi !== ls) {
     h += '<div class="note"><span>Peržiūrite kitą etapą. Dabar vyksta: <b>' + esc(st.title) + '</b></span><button data-a="view" data-i="' + ls + '">Grįžti</button></div>';
   }
@@ -540,14 +558,14 @@ setInterval(function () {
 }, 1000);
 
 function poll() {
-  if (SCREEN === 'main' && !inflight && ST) {
+  if ((SCREEN === 'main' || SCREEN === 'thanks') && !inflight && ST) {
     inflight = true;
     call('state', { v: D().v }).then(function (r) { inflight = false; handle(r, true); });
   }
   setTimeout(poll, document.hidden ? 15000 : 3000);
 }
 document.addEventListener('visibilitychange', function () {
-  if (!document.hidden && SCREEN === 'main' && ST && !inflight) {
+  if (!document.hidden && (SCREEN === 'main' || SCREEN === 'thanks') && ST && !inflight) {
     inflight = true;
     call('state', { v: D().v }).then(function (r) { inflight = false; handle(r, true); });
   }
@@ -620,7 +638,18 @@ function showName() {
     '<button class="btn pri" type="submit">Tęsti</button><p class="err" id="nerr"></p></form></div></div>';
   setTimeout(function () { var i = $('#nm'); if (i) i.focus(); }, 50);
 }
+function showThanks() {
+  SCREEN = 'thanks'; LV(true); closePanelDom();
+  $('#app').innerHTML = '<div class="thx"><div class="in"><div class="logo">⚜</div>' +
+    '<h1>Ačiū, kad dalyvavote!</h1>' +
+    '<p>Darbo grupės sesija baigta.</p>' +
+    '<p>Jūsų mintys ir pasiūlymai bus pristatyti visai konferencijai 16:00.</p>' +
+    '<p class="sub">Skautybės (skautų) pristatymas · ' + GNAME + '</p>' +
+    '<div class="bud">Budėk!</div></div></div>';
+  if (!polling) { polling = true; setTimeout(poll, 3000); }
+}
 function showMain() {
+  if (ROLE === 'user' && ST && D().live.done) { showThanks(); return; }
   SCREEN = 'main'; LV(false);
   render();
   if (!polling) { polling = true; setTimeout(poll, 3000); }
@@ -631,7 +660,8 @@ function logout(msg) {
 }
 function afterLogin(r) {
   if (!r.ok) return;
-  if (ROLE === 'user' && !D().joined) showName(); else showMain();
+  if (ROLE === 'user' && D().live.done) showThanks();
+  else if (ROLE === 'user' && !D().joined) showName(); else showMain();
 }
 
 /* ---------- events ---------- */
@@ -750,6 +780,9 @@ document.addEventListener('click', function (e) {
       call('text', { b: bid, t: val }).then(function (r) { if (r.ok) delete TDRAFT[bid]; handle(r); if (r.ok) { toast('Išsaugota'); render(); } });
       break;
     }
+    case 'finish':
+      act('finish', { on: !!btn.getAttribute('data-on') });
+      break;
     case 'stage':
       act('stage', { i: Number(btn.getAttribute('data-i')), start: !!btn.getAttribute('data-start') });
       break;
