@@ -243,6 +243,14 @@ function mockApi(req) {
       obj = normalize_(obj, req.g);
       var out = apiCore_(obj, req, Date.now());
       if (out.changed) try { localStorage.setItem('mock_' + req.g, JSON.stringify(obj)); } catch (e) {}
+      if (out.changed && out.shared) Object.keys(GROUPS).forEach(function (og) {
+        if (og === req.g) return;
+        var o2 = null;
+        try { o2 = JSON.parse(localStorage.getItem('mock_' + og)); } catch (e) {}
+        o2 = normalize_(o2, og);
+        applyShared_(o2, obj.settings, og, req.act === 'defaults');
+        try { localStorage.setItem('mock_' + og, JSON.stringify(o2)); } catch (e) {}
+      });
       res(JSON.parse(JSON.stringify(out.res)));
     }, 250);
   });
@@ -724,11 +732,12 @@ function renderPanel() {
   h += '<div class="tabs">' + tabs.map(function (t) { return '<button data-a="ptab" data-t="' + t[0] + '" class="' + (P.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</div></div>';
   h += '<div class="pb">';
   if (P.tab === 'bendra') {
-    h += '<div class="pc">' + fIn('Pavadinimas', 'title') + fIn('Grupė / laikas', 'label') +
-      fIn('Dalyvių slaptažodis', 'password') + fIn('Moderatoriaus slaptažodis', 'adminPassword') +
+    h += '<div class="pc"><h4>Tik šiai daliai (' + esc(GNAME) + ')</h4>' + fIn('Grupė / laikas', 'label') +
+      fIn('Dalyvių slaptažodis', 'password') + '</div>' +
+      '<div class="pc"><h4>Abiem dalims</h4>' + fIn('Pavadinimas', 'title') + fIn('Moderatoriaus slaptažodis', 'adminPassword') +
       fIn('Leisti pildyti dar neprasidėjusius etapus', 'allowFuture', 'bool') +
       fIn('Rodyti autorių vardus prie įrašų', 'showAuthors', 'bool') + '</div>' +
-      '<p class="muted">Pakeitus slaptažodį, prisijungę dalyviai bus paprašyti įvesti naują. Nepamirškite paspausti „Išsaugoti“.</p>';
+      '<p class="muted">Etapai, lentos, klausimai ir šios skilties „Abiem dalims“ laukai išsaugomi iš karto abiem dalims. Įrašai, balsai, sintezės tekstai ir laikmatis kiekvienai daliai lieka atskiri. Pakeitus slaptažodį, prisijungusieji bus paprašyti įvesti naują.</p>';
   } else if (P.tab === 'etapai') {
     s.stages.forEach(function (st, i) {
       h += '<div class="pc"><h4>' + (i + 1) + '. ' + esc(st.title) + '<span class="row">' +
@@ -777,8 +786,8 @@ function renderPanel() {
     h += '<div class="pc"><h4>Santrauka (tekstas pristatymui)</h4><textarea id="sumta" rows="12" readonly>' + esc(summary()) + '</textarea>' +
       '<div class="row" style="margin-top:8px"><button class="btn sm" data-a="copysum">Kopijuoti</button></div></div>' +
       '<div class="pc"><h4>Pavojinga zona</h4><div class="row">' +
-      '<button class="btn" data-a="clear" data-confirm="1">Išvalyti visus įrašus ir balsus</button>' +
-      '<button class="btn" data-a="defaults" data-confirm="1">Atkurti numatytus nustatymus</button></div>' +
+      '<button class="btn" data-a="clear" data-confirm="1">Išvalyti šios dalies įrašus ir balsus</button>' +
+      '<button class="btn" data-a="defaults" data-confirm="1">Atkurti numatytus nustatymus (abiem dalims)</button></div>' +
       '<p class="muted">Duomenys taip pat matomi grupės Google Sheets faile, lape „web_perziura“.</p></div>';
   } else if (P.tab === 'json') {
     h += '<div class="pc"><h4>Visi nustatymai (JSON)</h4><textarea id="pjson" rows="18" style="font:13px ui-monospace,Consolas,monospace">' + esc(JSON.stringify(s, null, 2)) + '</textarea>' +
@@ -825,7 +834,7 @@ function panelClick(a, btn) {
         btn.disabled = false; btn.textContent = 'Išsaugoti';
         if (r.ok && s.adminPassword && s.adminPassword !== PW) { PW = s.adminPassword.trim(); store.set('pw', PW); }
         handle(r);
-        if (r.ok) { toast('Nustatymai išsaugoti'); PANEL.set = clone(S()); renderPanel(); }
+        if (r.ok) { toast('Nustatymai išsaugoti abiem dalims'); PANEL.set = clone(S()); renderPanel(); }
       });
       break;
     case 'smove': {
@@ -854,7 +863,7 @@ function panelClick(a, btn) {
     case 'clear':
       act('clear').then(function (r) { if (r.ok) { toast('Įrašai ir balsai išvalyti'); renderPanel(); } }); break;
     case 'defaults':
-      act('defaults').then(function (r) { if (r.ok) { toast('Atkurti numatytieji nustatymai'); PANEL.set = clone(S()); renderPanel(); } }); break;
+      act('defaults').then(function (r) { if (r.ok) { toast('Atkurti numatytieji nustatymai (abiem dalims)'); PANEL.set = clone(S()); renderPanel(); } }); break;
     case 'copysum': {
       var ta = $('#sumta'); ta.removeAttribute('readonly'); ta.select();
       var ok = false;
