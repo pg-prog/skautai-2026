@@ -70,6 +70,8 @@ main{padding:0 14px 30px;max-width:760px;margin:0 auto}
 .badge{font-size:12px;font-weight:600;background:var(--gl);color:var(--g);border-radius:10px;padding:2px 8px}
 .hint{margin:0 0 10px;padding:0 0 0 18px;color:var(--mut);font-size:14px}
 .hint li{margin:2px 0}
+.hint li.ex{list-style:none;margin-left:-18px;padding-left:10px;border-left:3px solid var(--ln);font-style:italic;font-size:13px}
+.hint li.fx{color:var(--tx);font-weight:600}
 .vleft{background:var(--gl);border-radius:10px;padding:8px 10px;font-size:14px;margin:0 0 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .dots i{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--g);margin-right:3px;vertical-align:-1px}
 .dots i.f{background:var(--g)}
@@ -145,7 +147,12 @@ footer .ppl{margin-bottom:8px}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:99;max-width:92vw;box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s}
 .toast.on{opacity:1}
 .muted{color:var(--mut);font-size:13px}
+/* nuotraukų fonai */
+.top{background:linear-gradient(rgba(28,66,36,.58),rgba(28,66,36,.82)),var(--head-bg,none) center 55%/cover no-repeat,var(--g)}
+.login{background:linear-gradient(rgba(18,34,22,.18),rgba(18,34,22,.5)),var(--login-bg,none) center/cover no-repeat,var(--bg)}
+.login .card{background:rgba(255,255,255,.93);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 10px 40px rgba(0,0,0,.35)}
 </style>
+<script>(function(){var h=location.hostname,b=/github\.io$|^localhost$|^127\./.test(h)?'img/':'https://pg-prog.github.io/skautai-2026/img/',s=document.documentElement.style;s.setProperty('--login-bg','url('+b+'login_bg.jpg)');s.setProperty('--head-bg','url('+b+'header_bg.jpg)');})();</script>
 </head>
 <body>
 <div id="app"></div>
@@ -379,7 +386,10 @@ window.addEventListener('resize', chipArrows);
 
 function hintHtml(t) {
   if (!t) return '';
-  return '<ul class="hint">' + t.split('\n').filter(Boolean).map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>';
+  return '<ul class="hint">' + t.split('\n').filter(Boolean).map(function (l) {
+    var c = /^(Pvz\.|✓|✗)/.test(l) ? ' class="ex"' : (/^Formulė:/.test(l) ? ' class="fx"' : '');
+    return '<li' + c + '>' + esc(l) + '</li>';
+  }).join('') + '</ul>';
 }
 
 function renderBoard(bid) {
