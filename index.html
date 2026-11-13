@@ -153,10 +153,17 @@ footer .ppl{margin-bottom:8px}
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--login-bg,none) center/cover no-repeat;opacity:.08;filter:saturate(.7)}
 .login{background:linear-gradient(rgba(18,34,22,.18),rgba(18,34,22,.5)),var(--login-bg,none) center/cover no-repeat,var(--bg)}
 .login .card{background:rgba(255,255,255,.93);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 10px 40px rgba(0,0,0,.35)}
+/* gyvas prisijungimo fonas (lėtai krentantys lapai) */
+#live{position:fixed;inset:0;overflow:hidden;z-index:0;display:none;background:#2b3020}
+body.lv #live{display:block}
+body.lv .login{position:relative;z-index:1;background:linear-gradient(rgba(18,34,22,.12),rgba(18,34,22,.42))}
+#live .sc{position:absolute;background:var(--login-bg) 0 0/100% 100% no-repeat}
+#live canvas{position:absolute;left:0;top:0;width:100%;height:100%}
 </style>
 <script>(function(){var h=location.hostname,b=/github\.io$|^localhost$|^127\./.test(h)?'img/':'https://pg-prog.github.io/skautai-2026/img/',s=document.documentElement.style;s.setProperty('--login-bg','url('+b+'login_bg.jpg)');s.setProperty('--head-bg','url('+b+'header_bg.jpg)');})();</script>
 </head>
 <body>
+<div id="live" aria-hidden="true"><div class="sc"><canvas></canvas></div></div>
 <div id="app"></div>
 <div id="toast" class="toast"></div>
 <script>
@@ -546,9 +553,56 @@ document.addEventListener('visibilitychange', function () {
   }
 });
 
+/* ---------- gyvas fonas: lėtai krentantys lapai ---------- */
+var LV = (function () {
+  var IW = 1536, IH = 1024, on = false, raf = 0, sc, cv, cx, W, H, w, h, dpr, last = 0, L = [];
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  function fit() {
+    W = innerWidth; H = innerHeight;
+    var k = Math.max(W / IW, H / IH); w = IW * k; h = IH * k;
+    sc.style.width = w + 'px'; sc.style.height = h + 'px'; sc.style.left = (W - w) / 2 + 'px'; sc.style.top = (H - h) / 2 + 'px';
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var cap = 2600 / Math.max(w, h); if (dpr > cap) dpr = cap;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  }
+  function frame(ts) {
+    if (!on) return;
+    raf = requestAnimationFrame(frame);
+    var t = ts / 1000, dt = Math.min(.05, last ? t - last : .016); last = t;
+    var u = w / 1000, vx0 = (w - W) / 2 / w;
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0); cx.clearRect(0, 0, w, h);
+    if (L.length < 7 && Math.random() < dt * .5) L.push({ x: rnd(vx0 - .02, vx0 + Math.min(.35, W / w * .7)), y: rnd(-.05, .15), vy: rnd(.012, .022), ph: rnd(0, 6.3), sw: rnd(.4, .8), r: rnd(0, 6.3), vr: rnd(-.6, .6), s: rnd(.8, 1.25), c: Math.random() < .5 ? '231,178,46' : '214,150,38' });
+    L = L.filter(function (p) {
+      p.y += p.vy * dt; p.x += (.006 + .012 * Math.sin(t * p.sw + p.ph)) * dt; p.r += p.vr * dt;
+      if (p.y > 1.05 || p.x > 1.05) return false;
+      var sx = Math.cos(t * 1.2 * p.sw + p.ph), X = p.x * w, Y = p.y * h;
+      cx.save(); cx.translate(X, Y); cx.rotate(p.r); cx.scale(Math.max(.2, Math.abs(sx)), 1);
+      cx.fillStyle = 'rgba(' + p.c + ',.92)'; cx.beginPath(); cx.ellipse(0, 0, 4.2 * u * p.s, 6.5 * u * p.s, 0, 0, 6.3); cx.fill();
+      cx.strokeStyle = 'rgba(120,80,20,.5)'; cx.lineWidth = .6 * u; cx.beginPath(); cx.moveTo(0, -6 * u * p.s); cx.lineTo(0, 8.5 * u * p.s); cx.stroke();
+      cx.restore(); return true;
+    });
+  }
+  function set(v) {
+    if (v === on) return;
+    on = v; document.body.classList.toggle('lv', v);
+    if (v) {
+      if (!sc) { sc = document.querySelector('#live .sc'); cv = sc.querySelector('canvas'); cx = cv.getContext('2d'); addEventListener('resize', function () { if (on) fit(); }); }
+      fit(); last = 0;
+      if (!reduce) raf = requestAnimationFrame(frame);
+    } else cancelAnimationFrame(raf);
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (!on || reduce) return;
+    cancelAnimationFrame(raf);
+    if (!document.hidden) { last = 0; raf = requestAnimationFrame(frame); }
+  });
+  return set;
+})();
+
 /* ---------- screens ---------- */
 function showLogin(msg) {
-  SCREEN = 'login';
+  SCREEN = 'login'; LV(true);
   $('#app').innerHTML = '<div class="login"><div class="card"><div class="logo">⚜</div>' +
     '<h1>Skautybės (skautų) pristatymas</h1><p>Darbo grupė · ' + GNAME + '</p>' +
     '<form id="lf"><label for="pw">Slaptažodis</label>' +
@@ -557,7 +611,7 @@ function showLogin(msg) {
   setTimeout(function () { var i = $('#pw'); if (i) i.focus(); }, 50);
 }
 function showName() {
-  SCREEN = 'name';
+  SCREEN = 'name'; LV(true);
   var prev = store.get('name') || '';
   $('#app').innerHTML = '<div class="login"><div class="card"><div class="logo">⚜</div>' +
     '<h1>Kaip jus vadinti?</h1><p>Vardas bus matomas prie jūsų įrašų.</p>' +
@@ -567,7 +621,7 @@ function showName() {
   setTimeout(function () { var i = $('#nm'); if (i) i.focus(); }, 50);
 }
 function showMain() {
-  SCREEN = 'main';
+  SCREEN = 'main'; LV(false);
   render();
   if (!polling) { polling = true; setTimeout(poll, 3000); }
 }
@@ -917,7 +971,7 @@ function summary() {
 /* ---------- start ---------- */
 function boot() {
   if (!PW) { showLogin(''); return; }
-  SCREEN = 'loading';
+  SCREEN = 'loading'; LV(true);
   $('#app').innerHTML = '<div class="login"><div class="card"><div class="logo">⚜</div><p>Jungiamasi…</p></div></div>';
   call('login').then(function (r) {
     if (SCREEN !== 'loading') return;
