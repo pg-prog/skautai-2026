@@ -39,7 +39,16 @@ button{cursor:pointer}
 .adm button:disabled{opacity:.4}
 .adm button.go{background:#fff;color:var(--g2);font-weight:700;border-color:#fff}
 /* stage chips */
-.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 14px;max-width:760px;margin:0 auto;scrollbar-width:none}
+.chipw{position:relative;max-width:760px;margin:0 auto}
+.chipar{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:36px;height:36px;border-radius:50%;border:1px solid var(--ln);background:#fff;color:var(--g);font-size:22px;font-weight:700;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.15);display:none;padding:0}
+.chipar.l{left:4px}
+.chipar.r{right:4px}
+.chipw.cl .chipar.l,.chipw.cr .chipar.r{display:block}
+.chipw.cl::before,.chipw.cr::after{content:"";position:absolute;top:0;bottom:0;width:46px;z-index:2;pointer-events:none}
+.chipw.cl::before{left:0;background:linear-gradient(90deg,var(--bg),transparent)}
+.chipw.cr::after{right:0;background:linear-gradient(270deg,var(--bg),transparent)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 14px;scrollbar-width:none;position:relative;scroll-behavior:smooth}
+@media (min-width:700px){.chips{flex-wrap:wrap;overflow:visible}}
 .chips::-webkit-scrollbar{display:none}
 .chip{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--ln);background:#fff;border-radius:20px;padding:6px 12px 6px 6px;font-size:14px;min-height:38px}
 .chip span{width:24px;height:24px;border-radius:50%;background:#ecebe4;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
@@ -308,13 +317,14 @@ function render() {
   }
   h += '</div><div class="bar" id="bar"><i id="bf"></i></div></header>';
 
-  h += '<nav class="chips">';
+  h += '<div class="chipw"><button class="chipar l" data-a="chipscroll" data-d="-1" aria-label="Ankstesni etapai">‹</button>' +
+    '<button class="chipar r" data-a="chipscroll" data-d="1" aria-label="Kiti etapai">›</button><nav class="chips">';
   s.stages.forEach(function (x, i) {
     var c = i < ls ? 'done' : (i === ls ? 'cur' : '');
     if (i === vi) c += ' sel';
     h += '<button class="chip ' + c + '" data-a="view" data-i="' + i + '"><span>' + (i < ls ? '✓' : (i + 1)) + '</span>' + esc(x.title) + ' <em>' + x.minutes + '′</em></button>';
   });
-  h += '</nav>';
+  h += '</nav></div>';
 
   h += '<main id="main">';
   if (vi !== ls) {
@@ -337,12 +347,27 @@ function render() {
   var nav0 = $('.chips'), sl = nav0 ? nav0.scrollLeft : 0;
   $('#app').innerHTML = h;
   var nav = $('.chips'), sel = $('.chip.sel');
-  if (nav && sel) {
-    var want = sel.offsetLeft - nav.clientWidth / 2 + sel.offsetWidth / 2;
-    nav.scrollLeft = (sel.offsetLeft < sl || sel.offsetLeft + sel.offsetWidth > sl + nav.clientWidth) ? want : sl;
+  if (nav) {
+    nav.style.scrollBehavior = 'auto';
+    nav.scrollLeft = sl;
+    if (sel) {
+      var nr = nav.getBoundingClientRect(), sr = sel.getBoundingClientRect();
+      if (sr.left < nr.left + 40 || sr.right > nr.right - 40) nav.scrollLeft += (sr.left - nr.left) - (nr.width - sr.width) / 2;
+    }
+    nav.style.scrollBehavior = '';
+    nav.addEventListener('scroll', chipArrows);
   }
+  chipArrows();
   tick(); updSync();
 }
+
+function chipArrows() {
+  var nav = $('.chips'), w = $('.chipw');
+  if (!nav || !w) return;
+  w.classList.toggle('cl', nav.scrollLeft > 2);
+  w.classList.toggle('cr', nav.scrollLeft + nav.clientWidth < nav.scrollWidth - 2);
+}
+window.addEventListener('resize', chipArrows);
 
 function hintHtml(t) {
   if (!t) return '';
@@ -657,6 +682,11 @@ document.addEventListener('click', function (e) {
     case 'timer':
       act('timer', { op: btn.getAttribute('data-op'), s: Number(btn.getAttribute('data-s') || 0) });
       break;
+    case 'chipscroll': {
+      var cn = $('.chips');
+      if (cn) cn.scrollLeft += Number(btn.getAttribute('data-d')) * cn.clientWidth * 0.7;
+      break;
+    }
     case 'rename': showName(); break;
     case 'logout': logout(''); break;
     case 'panel': openPanel('bendra'); break;
