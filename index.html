@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skautybės pristatymas</title>
+<style>
+:root{
+  --g:#2f6b3a; --g2:#24552d; --gl:#e7f1e8; --bg:#f4f3ee; --card:#fff; --tx:#1d221e; --mut:#68716a;
+  --ln:#dcdcd4; --warn:#b7791f; --red:#c0392b; --redl:#fbe9e7; --gold:#f3e7b8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:760px;margin:0 auto}
+/* header */
+.top{position:sticky;top:0;z-index:20;background:var(--g);color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.top .in{max-width:760px;margin:0 auto;padding:8px 14px 0}
+.r1{display:flex;justify-content:space-between;align-items:center;font-size:13px;opacity:.9;gap:8px}
+.sync{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.sync i{width:8px;height:8px;border-radius:50%;background:#7ee08a;display:inline-block}
+.sync.bad i{background:#f5b041}
+.r2{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0 8px}
+.sn small{display:block;font-size:12px;opacity:.85}
+.sn b{font-size:18px;line-height:1.2;display:block}
+.tmw{text-align:right;flex:none}
+.tm{font:700 34px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.5px}
+.tm.warn{color:#ffe08a}
+.tm.over{color:#ffb4a8}
+.tms{font-size:11px;opacity:.85;text-transform:uppercase;letter-spacing:.6px}
+.bar{height:5px;background:rgba(255,255,255,.22)}
+.bar i{display:block;height:100%;width:0;background:#ffe08a;transition:width .9s linear}
+.bar.over i{background:#ff8a7a}
+.adm{display:flex;flex-wrap:wrap;gap:5px;padding:6px 0 8px}
+.adm button{flex:1 0 auto;border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 8px;font-size:13px;min-height:36px}
+.adm button:disabled{opacity:.4}
+.adm button.go{background:#fff;color:var(--g2);font-weight:700;border-color:#fff}
+/* stage chips */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 14px;max-width:760px;margin:0 auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:flex;align-items:center;gap:6px;border:1px solid var(--ln);background:#fff;border-radius:20px;padding:6px 12px 6px 6px;font-size:14px;min-height:38px}
+.chip span{width:24px;height:24px;border-radius:50%;background:#ecebe4;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.chip em{font-style:normal;color:var(--mut);font-size:12px}
+.chip.done span{background:var(--gl);color:var(--g)}
+.chip.cur{border-color:var(--g);box-shadow:inset 0 0 0 1px var(--g)}
+.chip.cur span{background:var(--g);color:#fff}
+.chip.sel{background:var(--gl)}
+/* main */
+main{padding:0 14px 30px;max-width:760px;margin:0 auto}
+.note{background:var(--gold);border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:14px;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.note button{border:0;background:var(--tx);color:#fff;border-radius:8px;padding:7px 10px;font-size:13px;flex:none}
+.stage h2{font-size:22px;margin:4px 0 2px;line-height:1.2}
+.stage .min{color:var(--mut);font-size:14px;margin-bottom:8px}
+.intro p{margin:0 0 8px}
+.locked{background:#ecebe4;border-radius:10px;padding:10px 12px;font-size:14px;color:var(--mut);margin:8px 0}
+.board{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:14px;margin:14px 0}
+.board h3{margin:0 0 6px;font-size:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.badge{font-size:12px;font-weight:600;background:var(--gl);color:var(--g);border-radius:10px;padding:2px 8px}
+.hint{margin:0 0 10px;padding:0 0 0 18px;color:var(--mut);font-size:14px}
+.hint li{margin:2px 0}
+.vleft{background:var(--gl);border-radius:10px;padding:8px 10px;font-size:14px;margin:0 0 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dots i{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid var(--g);margin-right:3px;vertical-align:-1px}
+.dots i.f{background:var(--g)}
+.items{list-style:none;margin:0;padding:0}
+.it{display:flex;gap:10px;padding:10px 0;border-top:1px solid #eeede7;align-items:flex-start}
+.it:first-child{border-top:0}
+.it.hi{background:linear-gradient(90deg,var(--gl),transparent 85%);border-radius:10px;padding-left:6px;margin-left:-6px}
+.no{flex:none;min-width:30px;font-weight:700;color:var(--g);font-size:14px;padding-top:2px}
+.bd{flex:1;min-width:0}
+.tx{white-space:pre-wrap;word-wrap:break-word}
+.ex,.lk{font-size:14px;color:#3e4741;margin-top:3px}
+.ex span,.lk span{color:var(--mut)}
+.mt{font-size:12px;color:var(--mut);margin-top:4px}
+.lnk{border:0;background:none;padding:2px 0;color:var(--g);font-size:12px;text-decoration:underline}
+.lnk.armed,.btn.armed{color:#fff;background:var(--red);border-radius:6px;padding:2px 6px;text-decoration:none}
+.vt{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px}
+.tot{font-weight:800;font-size:20px;line-height:1;min-width:34px;text-align:center}
+.tot small{display:block;font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase}
+.vb{display:flex;align-items:center;border:1px solid var(--ln);border-radius:10px;overflow:hidden}
+.vb button{border:0;background:#f6f6f2;width:38px;height:38px;font-size:20px;font-weight:700;color:var(--g)}
+.vb button:disabled{color:#bbb;background:#f6f6f2}
+.vb .mn{min-width:26px;text-align:center;font-weight:700}
+.empty{color:var(--mut);font-size:14px;padding:6px 0}
+form.add,.edit{display:flex;flex-direction:column;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--ln)}
+.edit{border-top:0;margin-top:0;padding-top:0}
+textarea,input[type=text],input[type=password],input[type=number],select{width:100%;border:1px solid #cfcfc6;border-radius:10px;padding:10px 12px;background:#fff;font-size:16px}
+textarea{resize:vertical;min-height:64px}
+textarea:focus,input:focus,select:focus{outline:2px solid var(--g);outline-offset:0;border-color:var(--g)}
+.btn{border:1px solid var(--ln);background:#fff;border-radius:10px;padding:10px 14px;font-weight:600;min-height:44px}
+.btn.pri{background:var(--g);border-color:var(--g);color:#fff}
+.btn.sm{min-height:36px;padding:6px 10px;font-size:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.ro{white-space:pre-wrap;background:#f8f8f4;border-radius:10px;padding:10px 12px;min-height:44px}
+.ro i{color:var(--mut)}
+.meta2{font-size:12px;color:var(--mut);margin-top:4px}
+.topl h4{margin:10px 0 4px;font-size:15px}
+.topl ol{margin:0;padding-left:0;list-style:none}
+.topl li{display:flex;gap:8px;padding:5px 0;border-top:1px solid #eeede7}
+.topl li b{color:var(--g);min-width:30px}
+.topl li .s{margin-left:auto;font-weight:800;flex:none}
+footer{max-width:760px;margin:0 auto;padding:0 14px 40px;color:var(--mut);font-size:13px}
+footer .ppl{margin-bottom:8px}
+/* login */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login .card{background:#fff;border-radius:18px;padding:26px 22px;width:100%;max-width:380px;box-shadow:0 6px 30px rgba(0,0,0,.08);text-align:center}
+.logo{width:56px;height:56px;border-radius:50%;background:var(--g);color:#fff;font-size:28px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.login h1{font-size:20px;margin:0 0 4px}
+.login p{margin:0 0 16px;color:var(--mut)}
+.login form{display:flex;flex-direction:column;gap:10px;text-align:left}
+.login label{font-size:14px;font-weight:600}
+.err{color:var(--red);font-size:14px;min-height:20px;margin:0}
+/* panel */
+.panel{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto}
+.ph{position:sticky;top:0;background:var(--tx);color:#fff;z-index:2}
+.ph .in{max-width:760px;margin:0 auto;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ph b{font-size:17px}
+.ph button{border:1px solid rgba(255,255,255,.5);background:none;color:#fff;border-radius:8px;padding:6px 12px}
+.tabs{display:flex;gap:4px;overflow-x:auto;max-width:760px;margin:0 auto;padding:0 10px 8px;scrollbar-width:none}
+.tabs button{flex:none;border:0;background:rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:7px 12px;font-size:14px}
+.tabs button.on{background:#fff;color:var(--tx);font-weight:700}
+.pb{max-width:760px;margin:0 auto;padding:14px 14px 110px}
+.pc{background:#fff;border:1px solid var(--ln);border-radius:12px;padding:12px;margin-bottom:12px}
+.pc h4{margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pc h4 code{font-size:12px;color:var(--mut);font-weight:400}
+.fl{display:block;font-size:13px;font-weight:600;margin:8px 0 4px;color:#3e4741}
+.chk{display:flex;align-items:center;gap:8px;font-size:15px;margin:8px 0}
+.chk input{width:20px;height:20px}
+.chks{display:flex;flex-wrap:wrap;gap:6px}
+.chks label{display:flex;align-items:center;gap:5px;border:1px solid var(--ln);border-radius:16px;padding:4px 10px;font-size:13px;background:#fafaf7}
+.pf{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--ln);padding:10px 14px;z-index:3}
+.pf .in{max-width:760px;margin:0 auto;display:flex;gap:8px}
+.pf .btn{flex:1}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:99;max-width:92vw;box-shadow:0 4px 14px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+.muted{color:var(--mut);font-size:13px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast"></div>
+<script>
+var G = '<?= g ?>';
+(function () {
+  if (!G || G.indexOf('<' + '?') === 0) { var m = /[?&]g=(\d)/.exec(location.search); G = m ? m[1] : '1'; }
+})();
+var EXEC = 'https://script.google.com/macros/s/AKfycbx865pSvEDaU-sHB1bRFGt-E9wbSnfSTXBsSpYDEDsUEaDdQUDN4OIYKjvDe7sx8KOG/exec';
+var GAS = typeof google !== 'undefined' && google.script && google.script.run;
+var MOCK = !GAS && /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && !/[?&]live=1/.test(location.search);
+var LIVE = !MOCK;
+var K = 'sk' + G + '_';
+var store = {
+  get: function (k) { try { return localStorage.getItem(K + k); } catch (e) { return null; } },
+  set: function (k, v) { try { localStorage.setItem(K + k, v); } catch (e) {} },
+  del: function (k) { try { localStorage.removeItem(K + k); } catch (e) {} }
+};
+var PID = (function () {
+  var m = /[?&]pid=([\w-]+)/.exec(location.search);
+  if (m) return m[1];
+  var p = store.get('pid');
+  if (!p) { p = 'p' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); store.set('pid', p); }
+  return p;
+})();
+var GNAME = G === '2' ? 'II dalis' : 'I dalis';
+
+var ST = null, ROLE = null, OFF = 0, VIEW = null, PREV_LIVE = -1, PW = store.get('pw') || '';
+var SCREEN = '', EDIT = null, DRAFT = {}, TDRAFT = {}, PANEL = null, PENDING = false, PD = false;
+var lastSync = 0, syncErr = false, inflight = false, polling = false, toastT = null;
+
+/* ---------- helpers ---------- */
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function $(s, r) { return (r || document).querySelector(s); }
+function toast(msg) {
+  var t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastT); toastT = setTimeout(function () { t.classList.remove('on'); }, 3500);
+}
+function fmt(sec) {
+  var neg = sec < 0, s = Math.abs(Math.round(sec)), m = Math.floor(s / 60), r = s % 60;
+  return (neg ? '+' : '') + m + ':' + (r < 10 ? '0' : '') + r;
+}
+function hm(ts) { var d = new Date(ts); return (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes(); }
+function S() { return ST.settings; }
+function D() { return ST.data; }
+function isAdmin() { return ROLE === 'admin'; }
+function liveStage() { return D().live.stage; }
+
+/* ---------- API ---------- */
+function call(act, extra) {
+  var req = { act: act, g: G, pw: PW, pid: PID };
+  for (var k in (extra || {})) req[k] = extra[k];
+  return new Promise(function (res) {
+    if (!GAS && LIVE) {
+      var tries = 0;
+      var go = function () {
+        fetch(EXEC, { method: 'POST', body: JSON.stringify(req), credentials: 'omit', redirect: 'follow', cache: 'no-store' })
+          .then(function (x) { if (!x.ok) throw new Error('HTTP ' + x.status); return x.json(); })
+          .then(function (r) { res(r || { ok: false, err: 'net', msg: 'Tuščias atsakymas' }); })
+          .catch(function () {
+            if (++tries < 2 && act === 'login') setTimeout(go, 800);
+            else res({ ok: false, err: 'net', msg: 'Ryšio klaida. Bandykite dar kartą.' });
+          });
+      };
+      go();
+    } else if (GAS) {
+      google.script.run.withSuccessHandler(function (r) { res(r || { ok: false, err: 'net', msg: 'Tuščias atsakymas' }); })
+        .withFailureHandler(function (e) { res({ ok: false, err: 'net', msg: 'Ryšio klaida. Bandykite dar kartą.' }); })
+        .api(req);
+    } else mockApi(req).then(res);
+  });
+}
+function handle(r, quiet) {
+  if (r.now) OFF = r.now - Date.now();
+  if (r.ok) {
+    lastSync = Date.now(); syncErr = false;
+    if (r.role) ROLE = r.role;
+    if (r.state) setState(r.state);
+  } else {
+    if (r.err === 'auth') { logout('Slaptažodis neteisingas arba pasikeitė.'); return r; }
+    if (r.err === 'net') syncErr = true;
+    if (!quiet || r.err !== 'net') toast(r.msg || 'Klaida');
+  }
+  updSync();
+  return r;
+}
+function act(name, extra) { return call(name, extra).then(function (r) { return handle(r); }); }
+
+function mockApi(req) {
+  return new Promise(function (res) {
+    setTimeout(function () {
+      var obj = null;
+      try { obj = JSON.parse(localStorage.getItem('mock_' + req.g)); } catch (e) {}
+      obj = normalize_(obj, req.g);
+      var out = apiCore_(obj, req, Date.now());
+      if (out.changed) try { localStorage.setItem('mock_' + req.g, JSON.stringify(obj)); } catch (e) {}
+      res(JSON.parse(JSON.stringify(out.res)));
+    }, 250);
+  });
+}
+
+/* ---------- state & rendering ---------- */
+function setState(s) {
+  ST = s;
+  var ls = s.data.live.stage;
+  if (ls !== PREV_LIVE) {
+    if (PREV_LIVE !== -1 && VIEW !== null) VIEW = null;
+    if (PREV_LIVE !== -1) try { window.scrollTo(0, 0); } catch (e) {}
+    PREV_LIVE = ls;
+  }
+  if (SCREEN === 'main' && ROLE === 'user' && !s.data.joined) { showName(); return; }
+  requestRender();
+}
+function typing() {
+  var a = document.activeElement;
+  return a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.closest && a.closest('#main');
+}
+function requestRender() {
+  if (SCREEN !== 'main') return;
+  if (typing() || PD) { PENDING = true; return; }
+  PENDING = false;
+  render();
+}
+document.addEventListener('pointerdown', function () { PD = true; }, true);
+document.addEventListener('pointerup', function () { setTimeout(function () { PD = false; }, 120); }, true);
+document.addEventListener('focusout', function () {
+  setTimeout(function () { if (PENDING && !typing() && !PD) requestRender(); }, 400);
+});
+
+function writable(bid) {
+  if (isAdmin()) return true;
+  var s = S(), ls = liveStage();
+  for (var i = 0; i < s.stages.length; i++) {
+    if (!s.allowFuture && i > ls) break;
+    if ((s.stages[i].boards || []).indexOf(bid) >= 0) return true;
+  }
+  return false;
+}
+function stageSec(i) { var st = S().stages[i]; return st ? Math.round((Number(st.minutes) || 0) * 60) : 0; }
+function remaining() {
+  var L = D().live, now = Date.now() + OFF;
+  if (L.run) return (L.end - now) / 1000;
+  return L.left == null ? stageSec(L.stage) : L.left;
+}
+
+function render() {
+  var s = S(), d = D(), ls = liveStage(), vi = VIEW == null ? ls : VIEW;
+  if (vi >= s.stages.length) { vi = ls; VIEW = null; }
+  var st = s.stages[ls] || { title: '' };
+  var h = '';
+  h += '<header class="top"><div class="in">';
+  h += '<div class="r1"><span>' + esc(s.label || GNAME) + '</span><span id="sync" class="sync"><i></i><span></span></span></div>';
+  h += '<div class="r2"><div class="sn"><small>Etapas ' + (ls + 1) + ' / ' + s.stages.length + (isAdmin() ? ' · moderatorius' : '') + '</small><b>' + esc(st.title) + '</b></div>';
+  h += '<div class="tmw"><div id="tm" class="tm">–:––</div><div id="tms" class="tms"></div></div></div>';
+  if (isAdmin()) {
+    var run = d.live.run;
+    h += '<div class="adm">' +
+      '<button class="go" data-a="timer" data-op="' + (run ? 'pause' : 'start') + '">' + (run ? '❚❚ Pauzė' : '▶ Pradėti') + '</button>' +
+      '<button data-a="timer" data-op="add" data-s="60">+1′</button>' +
+      '<button data-a="timer" data-op="add" data-s="300">+5′</button>' +
+      '<button data-a="timer" data-op="add" data-s="-60">−1′</button>' +
+      '<button data-a="timer" data-op="reset">↺</button>' +
+      '</div><div class="adm" style="padding-top:0">' +
+      '<button data-a="stage" data-i="' + (ls - 1) + '"' + (ls <= 0 ? ' disabled' : '') + '>◀ Atgal</button>' +
+      '<button data-a="stage" data-i="' + (ls + 1) + '" data-start="1"' + (ls >= s.stages.length - 1 ? ' disabled' : '') + '>Kitas etapas ▶</button>' +
+      '<button data-a="panel">⚙</button>' +
+      '</div>';
+  }
+  h += '</div><div class="bar" id="bar"><i id="bf"></i></div></header>';
+
+  h += '<nav class="chips">';
+  s.stages.forEach(function (x, i) {
+    var c = i < ls ? 'done' : (i === ls ? 'cur' : '');
+    if (i === vi) c += ' sel';
+    h += '<button class="chip ' + c + '" data-a="view" data-i="' + i + '"><span>' + (i < ls ? '✓' : (i + 1)) + '</span>' + esc(x.title) + ' <em>' + x.minutes + '′</em></button>';
+  });
+  h += '</nav>';
+
+  h += '<main id="main">';
+  if (vi !== ls) {
+    h += '<div class="note"><span>Peržiūrite kitą etapą. Dabar vyksta: <b>' + esc(st.title) + '</b></span><button data-a="view" data-i="' + ls + '">Grįžti</button></div>';
+  }
+  var vs = s.stages[vi];
+  h += '<div class="stage"><h2>' + esc(vs.title) + '</h2><div class="min">' + vs.minutes + ' min.</div>';
+  if (vs.intro) h += '<div class="intro">' + vs.intro.split('\n').map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') + '</div>';
+  if (vi > ls && !isAdmin() && !s.allowFuture) h += '<div class="locked">Šis etapas dar neprasidėjo – galite peržiūrėti klausimus, pildyti bus galima vėliau.</div>';
+  (vs.boards || []).forEach(function (bid) { h += renderBoard(bid); });
+  h += '</div></main>';
+
+  h += '<footer><div class="ppl"><b>Prisijungę (' + d.people.length + '):</b> ' +
+    (d.people.length ? d.people.map(function (p) { return esc(p.n) + (isAdmin() && p.voted ? ' ✓' : ''); }).join(', ') : '–') + '</div>' +
+    '<div class="row">' + (ROLE === 'user' ? '<button class="btn sm" data-a="rename">Keisti vardą</button>' : '') +
+    (isAdmin() ? '<button class="btn sm" data-a="panel">⚙ Nustatymai</button>' : '') +
+    '<button class="btn sm" data-a="logout">Atsijungti</button></div>' +
+    (LIVE ? '' : '<p class="muted">Vietinis bandymo režimas (duomenys tik šioje naršyklėje).</p>') + '</footer>';
+
+  var nav0 = $('.chips'), sl = nav0 ? nav0.scrollLeft : 0;
+  $('#app').innerHTML = h;
+  var nav = $('.chips'), sel = $('.chip.sel');
+  if (nav && sel) {
+    var want = sel.offsetLeft - nav.clientWidth / 2 + sel.offsetWidth / 2;
+    nav.scrollLeft = (sel.offsetLeft < sl || sel.offsetLeft + sel.offsetWidth > sl + nav.clientWidth) ? want : sl;
+  }
+  tick(); updSync();
+}
+
+function hintHtml(t) {
+  if (!t) return '';
+  return '<ul class="hint">' + t.split('\n').filter(Boolean).map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul>';
+}
+
+function renderBoard(bid) {
+  var b = S().boards[bid];
+  if (!b) return '';
+  if (b.kind === 'text') return renderText(bid, b);
+  if (b.kind === 'top') return renderTop(bid, b);
+  return renderList(bid, b);
+}
+
+function boardItems(bid) {
+  return D().items.filter(function (x) { return x.b === bid; }).sort(function (a, c) { return a.n - c.n; });
+}
+function itemLabel(it) { var b = S().boards[it.b] || {}; return (b.prefix || '') + it.n; }
+
+function renderList(bid, b) {
+  var d = D(), w = writable(bid), items = boardItems(bid), lim = Number(b.votes) || 0;
+  var used = 0;
+  items.forEach(function (x) { used += d.mine[x.id] || 0; });
+  var tots = items.map(function (x) { return d.totals[x.id] || 0; });
+  var h = '<section class="board" data-board="' + bid + '"><h3>' + esc(b.title) + (lim ? '<span class="badge">balsuojame · ' + lim + ' balsai</span>' : '') + '</h3>';
+  h += hintHtml(b.hint);
+  if (lim && d.joined) {
+    var dots = '';
+    for (var i = 0; i < lim; i++) dots += '<i class="' + (i < used ? 'f' : '') + '"></i>';
+    h += '<div class="vleft"><span class="dots">' + dots + '</span><span>Jūsų balsai: <b>liko ' + Math.max(0, lim - used) + '</b> iš ' + lim + '</span></div>';
+  }
+  h += '<ol class="items">';
+  if (!items.length) h += '<li class="empty">Dar nėra įrašų.</li>';
+  items.forEach(function (it, idx) {
+    var tot = tots[idx], rank = 1;
+    tots.forEach(function (t) { if (t > tot) rank++; });
+    var top = lim && tot > 0 && rank <= (b.top || 5);
+    var mine = d.mine[it.id] || 0, canEd = w && (isAdmin() || it.own);
+    h += '<li class="it' + (top ? ' hi' : '') + '"><div class="no">' + esc(itemLabel(it)) + '</div><div class="bd">';
+    if (EDIT && EDIT.id === it.id) {
+      h += '<div class="edit" data-edit="' + it.id + '"><textarea data-e="t" rows="3">' + esc(EDIT.t) + '</textarea>';
+      if (b.extra) h += '<input type="text" data-e="x" placeholder="' + esc(b.extra) + '" value="' + esc(EDIT.x) + '">';
+      if (b.link) h += linkSelect(b, EDIT.l, 'data-e="l"');
+      h += '<div class="row"><button class="btn pri sm" data-a="saveedit" data-id="' + it.id + '">Išsaugoti</button><button class="btn sm" data-a="canceledit">Atšaukti</button></div></div>';
+    } else {
+      h += '<div class="tx">' + esc(it.t) + '</div>';
+      if (b.extra && it.x) h += '<div class="ex"><span>' + esc(b.extra) + ':</span> ' + esc(it.x) + '</div>';
+      if (b.link && it.l) {
+        var li = null;
+        d.items.forEach(function (x) { if (x.id === it.l) li = x; });
+        if (li) h += '<div class="lk"><span>Sprendžia:</span> <b>' + esc(itemLabel(li)) + '</b> ' + esc(li.t.length > 70 ? li.t.slice(0, 70) + '…' : li.t) + '</div>';
+      }
+      var meta = [];
+      if (it.a) meta.push(esc(it.a));
+      if (canEd) meta.push('<button class="lnk" data-a="edit" data-id="' + it.id + '">Taisyti</button>', '<button class="lnk" data-a="del" data-id="' + it.id + '" data-confirm="1">Ištrinti</button>');
+      if (meta.length) h += '<div class="mt">' + meta.join(' · ') + '</div>';
+    }
+    h += '</div>';
+    if (lim) {
+      h += '<div class="vt"><div class="tot">' + tot + '<small>viso</small></div>';
+      if (d.joined) {
+        h += '<div class="vb"><button data-a="vote" data-d="-1" data-id="' + it.id + '"' + (mine && w ? '' : ' disabled') + ' aria-label="Nuimti balsą">−</button><span class="mn">' + mine + '</span>' +
+          '<button data-a="vote" data-d="1" data-id="' + it.id + '"' + (used < lim && w ? '' : ' disabled') + ' aria-label="Pridėti balsą">+</button></div>';
+      }
+      h += '</div>';
+    }
+    h += '</li>';
+  });
+  h += '</ol>';
+  if (w && (d.joined || isAdmin())) {
+    var dr = DRAFT[bid] || {};
+    h += '<form class="add" data-b="' + bid + '"><textarea name="t" rows="2" data-draft="t" placeholder="' + esc(b.placeholder || 'Naujas įrašas') + '">' + esc(dr.t || '') + '</textarea>';
+    if (b.extra) h += '<input type="text" name="x" data-draft="x" placeholder="' + esc(b.extra) + '" value="' + esc(dr.x || '') + '">';
+    if (b.link) h += linkSelect(b, dr.l || '', 'name="l" data-draft="l"');
+    h += '<button class="btn pri" type="submit">Pridėti</button></form>';
+  }
+  return h + '</section>';
+}
+
+function linkSelect(b, val, attr) {
+  var src = S().boards[b.link] || {}, its = boardItems(b.link);
+  var h = '<select ' + attr + '><option value="">Kurį iššūkį sprendžia? (nebūtina)</option>';
+  its.forEach(function (x) {
+    h += '<option value="' + x.id + '"' + (x.id === val ? ' selected' : '') + '>' + esc((src.prefix || '') + x.n + ' – ' + (x.t.length > 60 ? x.t.slice(0, 60) + '…' : x.t)) + '</option>';
+  });
+  return h + '</select>';
+}
+
+function renderText(bid, b) {
+  var t = D().texts[bid], can = writable(bid) && (isAdmin() || b.everyone);
+  var h = '<section class="board"><h3>' + esc(b.title) + '</h3>' + hintHtml(b.hint);
+  if (can) {
+    var v = TDRAFT[bid] != null ? TDRAFT[bid] : (t ? t.t : '');
+    h += '<textarea rows="3" data-text="' + bid + '">' + esc(v) + '</textarea>' +
+      '<div class="row" style="margin-top:8px"><button class="btn pri sm" data-a="savetext" data-b="' + bid + '">Išsaugoti</button>' +
+      (TDRAFT[bid] != null ? '<span class="muted" style="align-self:center">Neišsaugota</span>' : '') + '</div>';
+  } else {
+    h += '<div class="ro">' + (t && t.t ? esc(t.t) : '<i>' + (b.everyone ? 'Dar neužpildyta' : 'Pildo moderatorius') + '</i>') + '</div>';
+  }
+  if (t && t.ts) h += '<div class="meta2">Atnaujinta ' + hm(t.ts) + (t.a ? ' · ' + esc(t.a) : '') + '</div>';
+  return h + '</section>';
+}
+
+function renderTop(bid, b) {
+  var d = D(), h = '<section class="board topl"><h3>' + esc(b.title) + '</h3>' + hintHtml(b.hint);
+  (b.sources || []).forEach(function (sid) {
+    var sb = S().boards[sid];
+    if (!sb) return;
+    var its = boardItems(sid).filter(function (x) { return (d.totals[x.id] || 0) > 0; })
+      .sort(function (a, c) { return (d.totals[c.id] || 0) - (d.totals[a.id] || 0) || a.n - c.n; }).slice(0, b.n || 5);
+    h += '<h4>' + esc(sb.title) + '</h4>';
+    if (!its.length) { h += '<div class="muted">Dar nebalsuota.</div>'; return; }
+    h += '<ol>' + its.map(function (x) {
+      return '<li><b>' + esc(itemLabel(x)) + '</b><span>' + esc(x.t) + (x.x ? '<br><span class="muted">' + esc(sb.extra || '') + ': ' + esc(x.x) + '</span>' : '') + '</span><span class="s">' + d.totals[x.id] + '</span></li>';
+    }).join('') + '</ol>';
+  });
+  return h + '</section>';
+}
+
+function tick() {
+  if (SCREEN !== 'main' || !ST) return;
+  var tm = $('#tm');
+  if (!tm) return;
+  var rem = remaining(), full = stageSec(liveStage()), L = D().live;
+  tm.textContent = fmt(rem);
+  tm.className = 'tm' + (rem < 0 ? ' over' : (rem <= 60 ? ' warn' : ''));
+  $('#tms').textContent = rem < 0 ? 'laikas baigėsi' : (L.run ? 'liko' : (L.left == null ? 'nepradėta' : 'pauzė'));
+  var pct = full ? Math.min(100, Math.max(0, (1 - rem / full) * 100)) : 0;
+  $('#bf').style.width = pct + '%';
+  $('#bar').className = 'bar' + (rem < 0 ? ' over' : '');
+}
+function updSync() {
+  var el = $('#sync');
+  if (!el) return;
+  var ago = Math.round((Date.now() - lastSync) / 1000);
+  var bad = syncErr || ago > 20;
+  el.className = 'sync' + (bad ? ' bad' : '');
+  el.lastChild.textContent = bad ? 'jungiamasi…' : 'gyvai';
+}
+setInterval(function () {
+  tick(); updSync();
+  if (PENDING && !typing() && !PD) requestRender();
+}, 1000);
+
+function poll() {
+  if (SCREEN === 'main' && !inflight && ST) {
+    inflight = true;
+    call('state', { v: D().v }).then(function (r) { inflight = false; handle(r, true); });
+  }
+  setTimeout(poll, document.hidden ? 15000 : 3000);
+}
+document.addEventListener('visibilitychange', function () {
+  if (!document.hidden && SCREEN === 'main' && ST && !inflight) {
+    inflight = true;
+    call('state', { v: D().v }).then(function (r) { inflight = false; handle(r, true); });
+  }
+});
+
+/* ---------- screens ---------- */
+function showLogin(msg) {
+  SCREEN = 'login';
+  $('#app').innerHTML = '<div class="login"><div class="card"><div class="logo">⚜</div>' +
+    '<h1>Skautybės (skautų) pristatymas</h1><p>Darbo grupė · ' + GNAME + '</p>' +
+    '<form id="lf"><label for="pw">Slaptažodis</label>' +
+    '<input id="pw" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">' +
+    '<button class="btn pri" type="submit">Įeiti</button><p class="err" id="lerr">' + esc(msg || '') + '</p></form></div></div>';
+  setTimeout(function () { var i = $('#pw'); if (i) i.focus(); }, 50);
+}
+function showName() {
+  SCREEN = 'name';
+  var prev = store.get('name') || '';
+  $('#app').innerHTML = '<div class="login"><div class="card"><div class="logo">⚜</div>' +
+    '<h1>Kaip jus vadinti?</h1><p>Vardas bus matomas prie jūsų įrašų.</p>' +
+    '<form id="nf"><label for="nm">Vardas (ir organizacija)</label>' +
+    '<input id="nm" type="text" maxlength="40" value="' + esc(prev) + '" placeholder="pvz. Ona (LSS)">' +
+    '<button class="btn pri" type="submit">Tęsti</button><p class="err" id="nerr"></p></form></div></div>';
+  setTimeout(function () { var i = $('#nm'); if (i) i.focus(); }, 50);
+}
+function showMain() {
+  SCREEN = 'main';
+  render();
+  if (!polling) { polling = true; setTimeout(poll, 3000); }
+}
+function logout(msg) {
+  PW = ''; store.del('pw'); ROLE = null; ST = null; PANEL = null; closePanelDom();
+  showLogin(msg);
+}
+function afterLogin(r) {
+  if (!r.ok) return;
+  if (ROLE === 'user' && !D().joined) showName(); else showMain();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('submit', function (e) {
+  var f = e.target;
+  e.preventDefault();
+  if (f.id === 'lf') {
+    var pw = $('#pw').value.trim();
+    if (!pw) { $('#lerr').textContent = 'Įveskite slaptažodį'; return; }
+    var btn = f.querySelector('button'); btn.disabled = true; btn.textContent = 'Jungiamasi…';
+    PW = pw;
+    call('login').then(function (r) {
+      if (!r.ok) { btn.disabled = false; btn.textContent = 'Įeiti'; PW = ''; $('#lerr').textContent = r.msg || 'Klaida'; return; }
+      store.set('pw', pw); handle(r); afterLogin(r);
+    });
+  } else if (f.id === 'nf') {
+    var nm = $('#nm').value.trim();
+    if (!nm) { $('#nerr').textContent = 'Įveskite vardą'; return; }
+    var b2 = f.querySelector('button'); b2.disabled = true;
+    call('join', { name: nm }).then(function (r) {
+      b2.disabled = false;
+      if (!r.ok) { $('#nerr').textContent = r.msg || 'Klaida'; return; }
+      store.set('name', nm); SCREEN = 'main'; handle(r); showMain();
+    });
+  } else if (f.classList.contains('add')) {
+    var bid = f.getAttribute('data-b'), t = f.querySelector('[name=t]').value.trim();
+    if (!t) { toast('Įrašas tuščias'); return; }
+    var x = f.querySelector('[name=x]'), l = f.querySelector('[name=l]');
+    var sb = f.querySelector('button'); sb.disabled = true; sb.textContent = 'Siunčiama…';
+    if (document.activeElement) document.activeElement.blur();
+    call('add', { b: bid, t: t, x: x ? x.value : '', l: l ? l.value : '' }).then(function (r) {
+      if (r.ok) delete DRAFT[bid];
+      sb.disabled = false; sb.textContent = 'Pridėti';
+      handle(r);
+      if (r.ok) toast('Įrašyta');
+    });
+  }
+});
+
+document.addEventListener('input', function (e) {
+  var el = e.target;
+  var f = el.closest && el.closest('form.add');
+  if (f && el.getAttribute('data-draft')) {
+    var bid = f.getAttribute('data-b');
+    DRAFT[bid] = DRAFT[bid] || {};
+    DRAFT[bid][el.getAttribute('data-draft')] = el.value;
+  }
+  if (el.getAttribute && el.getAttribute('data-e') && EDIT) EDIT[el.getAttribute('data-e')] = el.value;
+  if (el.getAttribute && el.getAttribute('data-text')) TDRAFT[el.getAttribute('data-text')] = el.value;
+  if (el.closest && el.closest('#panel')) panelInput(el);
+});
+document.addEventListener('change', function (e) {
+  var el = e.target;
+  if (el.tagName === 'SELECT' || el.type === 'checkbox') {
+    var f = el.closest && el.closest('form.add');
+    if (f && el.getAttribute('data-draft')) {
+      var bid = f.getAttribute('data-b');
+      DRAFT[bid] = DRAFT[bid] || {};
+      DRAFT[bid][el.getAttribute('data-draft')] = el.value;
+    }
+    if (el.getAttribute('data-e') && EDIT) EDIT[el.getAttribute('data-e')] = el.value;
+    if (el.closest && el.closest('#panel')) panelInput(el, true);
+  }
+});
+
+function armed(btn) {
+  if (!btn.getAttribute('data-confirm')) return true;
+  if (btn.classList.contains('armed')) return true;
+  var old = btn.textContent;
+  btn.classList.add('armed'); btn.textContent = 'Tikrai? Spauskite dar kartą';
+  setTimeout(function () { if (btn.isConnected) { btn.classList.remove('armed'); btn.textContent = old; } }, 4000);
+  return false;
+}
+
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest && e.target.closest('[data-a]');
+  if (!btn || btn.disabled) return;
+  var a = btn.getAttribute('data-a'), id = btn.getAttribute('data-id');
+  if (!armed(btn)) return;
+  switch (a) {
+    case 'view':
+      var i = Number(btn.getAttribute('data-i'));
+      VIEW = i === liveStage() ? null : i; EDIT = null; render(); try { window.scrollTo(0, 0); } catch (er) {}
+      break;
+    case 'vote': {
+      var dlt = Number(btn.getAttribute('data-d')), d = D();
+      d.mine[id] = Math.max(0, (d.mine[id] || 0) + dlt);
+      d.totals[id] = Math.max(0, (d.totals[id] || 0) + dlt);
+      render();
+      call('vote', { id: id, d: dlt }).then(function (r) {
+        handle(r);
+        if (!r.ok) call('state', { v: -1 }).then(function (r2) { handle(r2, true); });
+      });
+      break;
+    }
+    case 'edit': {
+      var it = null;
+      D().items.forEach(function (x) { if (x.id === id) it = x; });
+      if (it) { EDIT = { id: id, t: it.t, x: it.x || '', l: it.l || '' }; render(); var ta = document.querySelector('[data-edit] textarea'); if (ta) ta.focus(); }
+      break;
+    }
+    case 'canceledit': EDIT = null; render(); break;
+    case 'saveedit': {
+      var ed = EDIT; if (!ed) break;
+      btn.disabled = true;
+      call('edit', { id: ed.id, t: ed.t, x: ed.x, l: ed.l }).then(function (r) { if (r.ok) EDIT = null; handle(r); if (r.ok) render(); });
+      break;
+    }
+    case 'del':
+      call('del', { id: id }).then(function (r) { handle(r); if (r.ok) toast('Ištrinta'); });
+      break;
+    case 'savetext': {
+      var bid = btn.getAttribute('data-b'), ta2 = document.querySelector('[data-text="' + bid + '"]');
+      var val = ta2 ? ta2.value : (TDRAFT[bid] || '');
+      btn.disabled = true;
+      call('text', { b: bid, t: val }).then(function (r) { if (r.ok) delete TDRAFT[bid]; handle(r); if (r.ok) { toast('Išsaugota'); render(); } });
+      break;
+    }
+    case 'stage':
+      act('stage', { i: Number(btn.getAttribute('data-i')), start: !!btn.getAttribute('data-start') });
+      break;
+    case 'timer':
+      act('timer', { op: btn.getAttribute('data-op'), s: Number(btn.getAttribute('data-s') || 0) });
+      break;
+    case 'rename': showName(); break;
+    case 'logout': logout(''); break;
+    case 'panel': openPanel('bendra'); break;
+    default: panelClick(a, btn);
+  }
+});
+
+/* ---------- moderator panel ---------- */
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function openPanel(tab) {
+  PANEL = { tab: tab, set: clone(S()) };
+  renderPanel();
+}
+function closePanelDom() { var p = $('#panel'); if (p) p.remove(); }
+function getP(o, path) { return path.split('.').reduce(function (a, k) { return a == null ? a : a[k]; }, o); }
+function setP(o, path, v) {
+  var ks = path.split('.'), last = ks.pop();
+  var t = ks.reduce(function (a, k) { return a[k]; }, o);
+  t[last] = v;
+}
+function fIn(label, path, type, extra) {
+  var v = getP(PANEL.set, path);
+  if (type === 'area') return '<label class="fl">' + label + '</label><textarea data-p="' + path + '" rows="' + (extra || 3) + '">' + esc(v || '') + '</textarea>';
+  if (type === 'bool') return '<label class="chk"><input type="checkbox" data-p="' + path + '" data-t="b"' + (v ? ' checked' : '') + '> ' + label + '</label>';
+  return '<label class="fl">' + label + '</label><input type="' + (type === 'n' ? 'number' : 'text') + '" data-p="' + path + '"' + (type === 'n' ? ' data-t="n" inputmode="numeric"' : '') + ' value="' + esc(v == null ? '' : v) + '">';
+}
+function boardIds() { return Object.keys(PANEL.set.boards); }
+function kindName(k) { return { list: 'sąrašas', text: 'vienas tekstas', top: 'TOP balsai' }[k] || k; }
+
+function renderPanel() {
+  closePanelDom();
+  var P = PANEL, s = P.set, h = '';
+  var tabs = [['bendra', 'Bendra'], ['etapai', 'Etapai'], ['lentos', 'Lentos'], ['dalyviai', 'Dalyviai'], ['duomenys', 'Duomenys'], ['json', 'JSON']];
+  h += '<div class="ph"><div class="in"><b>⚙ Moderatoriaus nustatymai</b><button data-a="pclose">Uždaryti</button></div>';
+  h += '<div class="tabs">' + tabs.map(function (t) { return '<button data-a="ptab" data-t="' + t[0] + '" class="' + (P.tab === t[0] ? 'on' : '') + '">' + t[1] + '</button>'; }).join('') + '</div></div>';
+  h += '<div class="pb">';
+  if (P.tab === 'bendra') {
+    h += '<div class="pc">' + fIn('Pavadinimas', 'title') + fIn('Grupė / laikas', 'label') +
+      fIn('Dalyvių slaptažodis', 'password') + fIn('Moderatoriaus slaptažodis', 'adminPassword') +
+      fIn('Leisti pildyti dar neprasidėjusius etapus', 'allowFuture', 'bool') +
+      fIn('Rodyti autorių vardus prie įrašų', 'showAuthors', 'bool') + '</div>' +
+      '<p class="muted">Pakeitus slaptažodį, prisijungę dalyviai bus paprašyti įvesti naują. Nepamirškite paspausti „Išsaugoti“.</p>';
+  } else if (P.tab === 'etapai') {
+    s.stages.forEach(function (st, i) {
+      h += '<div class="pc"><h4>' + (i + 1) + '. ' + esc(st.title) + '<span class="row">' +
+        '<button class="btn sm" data-a="smove" data-i="' + i + '" data-d="-1"' + (i ? '' : ' disabled') + '>↑</button>' +
+        '<button class="btn sm" data-a="smove" data-i="' + i + '" data-d="1"' + (i < s.stages.length - 1 ? '' : ' disabled') + '>↓</button>' +
+        '<button class="btn sm" data-a="sdel" data-i="' + i + '" data-confirm="1">✕</button></span></h4>' +
+        fIn('Pavadinimas', 'stages.' + i + '.title') + fIn('Trukmė (min.)', 'stages.' + i + '.minutes', 'n') +
+        fIn('Įžanga / užduotis (kiekviena eilutė – atskira pastraipa)', 'stages.' + i + '.intro', 'area', 3) +
+        '<label class="fl">Lentos šiame etape (rodomos pažymėjimo tvarka)</label><div class="chks">' +
+        boardIds().map(function (bid) {
+          var on = (st.boards || []).indexOf(bid) >= 0;
+          return '<label><input type="checkbox" data-sb="' + i + '" value="' + bid + '"' + (on ? ' checked' : '') + '> ' + esc(s.boards[bid].title) + '</label>';
+        }).join('') + '</div></div>';
+    });
+    h += '<button class="btn" data-a="sadd">+ Pridėti etapą</button>';
+  } else if (P.tab === 'lentos') {
+    boardIds().forEach(function (bid) {
+      var b = s.boards[bid], p = 'boards.' + bid + '.';
+      h += '<div class="pc"><h4><span>' + esc(b.title) + ' <code>' + bid + '</code></span><button class="btn sm" data-a="bdel" data-b="' + bid + '" data-confirm="1">✕</button></h4>' +
+        '<label class="fl">Tipas</label><select data-p="' + p + 'kind" data-re="1">' + ['list', 'text', 'top'].map(function (k) { return '<option value="' + k + '"' + (b.kind === k ? ' selected' : '') + '>' + kindName(k) + '</option>'; }).join('') + '</select>' +
+        fIn('Pavadinimas', p + 'title') + fIn('Klausimai / užuominos (kiekviena eilutė atskirai)', p + 'hint', 'area', 4);
+      if (b.kind === 'list') {
+        h += fIn('Įrašo laukelio užuomina', p + 'placeholder') + fIn('Numerio raidė (pvz. I, T)', p + 'prefix') +
+          fIn('Balsų kiekvienam dalyviui (0 – nebalsuojama)', p + 'votes', 'n') + fIn('Kiek geriausių paryškinti', p + 'top', 'n') +
+          fIn('Papildomas laukelis (pvz. „Iš ko pamatysime“, tuščia – nėra)', p + 'extra') +
+          '<label class="fl">Susieti su lenta („Kurį iššūkį sprendžia?“)</label><select data-p="' + p + 'link"><option value="">–</option>' +
+          boardIds().filter(function (x) { return x !== bid && s.boards[x].kind === 'list'; }).map(function (x) { return '<option value="' + x + '"' + (b.link === x ? ' selected' : '') + '>' + esc(s.boards[x].title) + '</option>'; }).join('') + '</select>';
+      } else if (b.kind === 'text') {
+        h += fIn('Pildyti gali visi dalyviai (kitaip – tik moderatorius)', p + 'everyone', 'bool');
+      } else {
+        h += fIn('Kiek rodyti iš kiekvienos lentos', p + 'n', 'n') + '<label class="fl">Iš kurių lentų</label><div class="chks">' +
+          boardIds().filter(function (x) { return s.boards[x].kind === 'list'; }).map(function (x) {
+            return '<label><input type="checkbox" data-src="' + bid + '" value="' + x + '"' + ((b.sources || []).indexOf(x) >= 0 ? ' checked' : '') + '> ' + esc(s.boards[x].title) + '</label>';
+          }).join('') + '</div>';
+      }
+      h += '</div>';
+    });
+    h += '<button class="btn" data-a="badd">+ Nauja lenta</button><p class="muted">Nauja lenta atsiras etapuose tik ją pažymėjus skirtuke „Etapai“.</p>';
+  } else if (P.tab === 'dalyviai') {
+    var ppl = D().people;
+    h += '<div class="pc">' + (ppl.length ? ppl.map(function (p) {
+      return '<div class="row" style="justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid #eee"><span>' + esc(p.n) + (p.voted ? ' <span class="muted">· balsavo</span>' : '') + '</span>' +
+        '<button class="btn sm" data-a="kick" data-p="' + p.p + '" data-confirm="1">Pašalinti</button></div>';
+    }).join('') : '<span class="muted">Dar niekas neprisijungė.</span>') + '</div><p class="muted">Pašalinus dalyvį, ištrinami jo balsai (įrašai lieka). Jis galės vėl įvesti vardą.</p>';
+  } else if (P.tab === 'duomenys') {
+    h += '<div class="pc"><h4>Santrauka (tekstas pristatymui)</h4><textarea id="sumta" rows="12" readonly>' + esc(summary()) + '</textarea>' +
+      '<div class="row" style="margin-top:8px"><button class="btn sm" data-a="copysum">Kopijuoti</button></div></div>' +
+      '<div class="pc"><h4>Pavojinga zona</h4><div class="row">' +
+      '<button class="btn" data-a="clear" data-confirm="1">Išvalyti visus įrašus ir balsus</button>' +
+      '<button class="btn" data-a="defaults" data-confirm="1">Atkurti numatytus nustatymus</button></div>' +
+      '<p class="muted">Duomenys taip pat matomi grupės Google Sheets faile, lape „web_perziura“.</p></div>';
+  } else if (P.tab === 'json') {
+    h += '<div class="pc"><h4>Visi nustatymai (JSON)</h4><textarea id="pjson" rows="18" style="font:13px ui-monospace,Consolas,monospace">' + esc(JSON.stringify(s, null, 2)) + '</textarea>' +
+      '<div class="row" style="margin-top:8px"><button class="btn sm" data-a="pjson">Pritaikyti JSON</button></div><p class="muted">Pritaikius – dar paspauskite „Išsaugoti“.</p></div>';
+  }
+  h += '</div><div class="pf"><div class="in"><button class="btn" data-a="pclose">Atšaukti</button><button class="btn pri" data-a="psave">Išsaugoti</button></div></div>';
+  var el = document.createElement('div');
+  el.id = 'panel'; el.className = 'panel'; el.innerHTML = h;
+  document.body.appendChild(el);
+}
+
+function panelInput(el, isChange) {
+  if (!PANEL) return;
+  var s = PANEL.set;
+  if (el.hasAttribute('data-sb')) {
+    var st = s.stages[Number(el.getAttribute('data-sb'))];
+    st.boards = (st.boards || []).filter(function (x) { return x !== el.value; });
+    if (el.checked) st.boards.push(el.value);
+    return;
+  }
+  if (el.hasAttribute('data-src')) {
+    var b = s.boards[el.getAttribute('data-src')];
+    b.sources = (b.sources || []).filter(function (x) { return x !== el.value; });
+    if (el.checked) b.sources.push(el.value);
+    return;
+  }
+  var p = el.getAttribute('data-p');
+  if (!p) return;
+  var t = el.getAttribute('data-t'), v = el.value;
+  if (t === 'b') v = el.checked; else if (t === 'n') v = Number(v) || 0;
+  setP(s, p, v);
+  if (isChange && el.getAttribute('data-re')) renderPanel();
+}
+
+function panelClick(a, btn) {
+  if (!PANEL && a.charAt(0) === 'p') return;
+  var s = PANEL ? PANEL.set : null, i = Number(btn.getAttribute('data-i'));
+  switch (a) {
+    case 'pclose': PANEL = null; closePanelDom(); requestRender(); break;
+    case 'ptab': PANEL.tab = btn.getAttribute('data-t'); renderPanel(); break;
+    case 'psave':
+      btn.disabled = true; btn.textContent = 'Saugoma…';
+      call('settings', { s: s }).then(function (r) {
+        btn.disabled = false; btn.textContent = 'Išsaugoti';
+        if (r.ok && s.adminPassword && s.adminPassword !== PW) { PW = s.adminPassword.trim(); store.set('pw', PW); }
+        handle(r);
+        if (r.ok) { toast('Nustatymai išsaugoti'); PANEL.set = clone(S()); renderPanel(); }
+      });
+      break;
+    case 'smove': {
+      var d = Number(btn.getAttribute('data-d')), x = s.stages.splice(i, 1)[0];
+      s.stages.splice(i + d, 0, x); renderPanel(); break;
+    }
+    case 'sdel': s.stages.splice(i, 1); renderPanel(); break;
+    case 'sadd': s.stages.push({ title: 'Naujas etapas', minutes: 10, intro: '', boards: [] }); renderPanel(); break;
+    case 'bdel': {
+      var bid = btn.getAttribute('data-b');
+      delete s.boards[bid];
+      s.stages.forEach(function (st) { st.boards = (st.boards || []).filter(function (x) { return x !== bid; }); });
+      renderPanel(); break;
+    }
+    case 'badd': {
+      var k = 1; while (s.boards['lenta' + k]) k++;
+      s.boards['lenta' + k] = { kind: 'list', title: 'Nauja lenta', hint: '', placeholder: '', prefix: '', votes: 0, top: 5, extra: '', link: '' };
+      renderPanel(); break;
+    }
+    case 'pjson':
+      try { PANEL.set = JSON.parse($('#pjson').value); toast('JSON pritaikytas – dabar „Išsaugoti“'); renderPanel(); }
+      catch (e) { toast('JSON klaida: ' + e.message); }
+      break;
+    case 'kick':
+      act('kick', { p: btn.getAttribute('data-p') }).then(function (r) { if (r.ok) renderPanel(); }); break;
+    case 'clear':
+      act('clear').then(function (r) { if (r.ok) { toast('Įrašai ir balsai išvalyti'); renderPanel(); } }); break;
+    case 'defaults':
+      act('defaults').then(function (r) { if (r.ok) { toast('Atkurti numatytieji nustatymai'); PANEL.set = clone(S()); renderPanel(); } }); break;
+    case 'copysum': {
+      var ta = $('#sumta'); ta.removeAttribute('readonly'); ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      ta.setAttribute('readonly', '');
+      if (ok) toast('Nukopijuota');
+      else if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(function () { toast('Nukopijuota'); }, function () { toast('Pažymėkite tekstą ir nukopijuokite ranka'); });
+      else toast('Pažymėkite tekstą ir nukopijuokite ranka');
+      break;
+    }
+  }
+}
+
+function summary() {
+  var s = S(), d = D(), out = [s.title + ' – ' + (s.label || GNAME), ''], seen = {};
+  s.stages.forEach(function (st) {
+    var parts = [];
+    (st.boards || []).forEach(function (bid) {
+      var b = s.boards[bid];
+      if (!b || b.kind === 'top' || seen[bid]) return;
+      seen[bid] = true;
+      if (b.kind === 'text') {
+        var t = d.texts[bid];
+        if (t && t.t) parts.push(b.title + ':\n' + t.t);
+        return;
+      }
+      var its = boardItems(bid);
+      if (!its.length) return;
+      if (b.votes) its = its.slice().sort(function (a, c) { return (d.totals[c.id] || 0) - (d.totals[a.id] || 0) || a.n - c.n; });
+      parts.push(b.title + ':\n' + its.map(function (x) {
+        return '  ' + itemLabel(x) + '. ' + x.t + (x.x ? ' (' + (b.extra || '') + ': ' + x.x + ')' : '') + (b.votes ? ' [' + (d.totals[x.id] || 0) + ' bals.]' : '');
+      }).join('\n'));
+    });
+    if (parts.length) out.push('== ' + st.title + ' ==', parts.join('\n\n'), '');
+  });
+  return out.join('\n');
+}
+
+/* ---------- start ---------- */
+function boot() {
+  if (!PW) { showLogin(''); return; }
+  SCREEN = 'loading';
+  $('#app').innerHTML = '<div class="login"><div class="card"><div class="logo">⚜</div><p>Jungiamasi…</p></div></div>';
+  call('login').then(function (r) {
+    if (SCREEN !== 'loading') return;
+    if (!r.ok) { if (r.err === 'auth') { PW = ''; store.del('pw'); } showLogin(r.err === 'auth' ? '' : (r.msg || 'Klaida')); return; }
+    handle(r); afterLogin(r);
+  });
+}
+if (LIVE) boot();
+else {
+  // vietinis bandymas: logika iš Code.js, duomenys naršyklėje
+  var sc = document.createElement('script');
+  sc.src = 'Code.js'; sc.onload = boot;
+  sc.onerror = function () { $('#app').textContent = 'Nepavyko įkelti Code.js (vietinis režimas).'; };
+  document.head.appendChild(sc);
+}
+</script>
+</body>
+</html>
